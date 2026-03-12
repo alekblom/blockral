@@ -40,4 +40,7 @@ pub enum BlockralError {
 
     #[msg("Program still has active referral links")]
     ProgramHasLinks,
+
+    #[msg("Referrer does not meet verification requirements")]
+    VerificationRequired,
 }

@@ -26,6 +26,7 @@ pub fn handler(
     referrer_commission_bps: u16,
     platform_fee_bps: u16,
     platform_wallet: Pubkey,
+    verification_authority: Pubkey,
 ) -> Result<()> {
     require!(name.iter().any(|&b| b != 0), BlockralError::EmptyName);
     require!(
@@ -51,6 +52,7 @@ pub fn handler(
     program.referrer_commission_bps = referrer_commission_bps;
     program.platform_fee_bps = platform_fee_bps;
     program.platform_wallet = platform_wallet;
+    program.verification_authority = verification_authority;
     program.total_payments = 0;
     program.total_referrers = 0;
     program.active = true;

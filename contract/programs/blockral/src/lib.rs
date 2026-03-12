@@ -18,8 +18,9 @@ pub mod blockral {
         referrer_commission_bps: u16,
         platform_fee_bps: u16,
         platform_wallet: Pubkey,
+        verification_authority: Pubkey,
     ) -> Result<()> {
-        instructions::create_program::handler(ctx, name, referrer_commission_bps, platform_fee_bps, platform_wallet)
+        instructions::create_program::handler(ctx, name, referrer_commission_bps, platform_fee_bps, platform_wallet, verification_authority)
     }
 
     pub fn join_program(ctx: Context<JoinProgram>) -> Result<()> {

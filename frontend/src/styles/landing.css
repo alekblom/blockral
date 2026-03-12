@@ -27,6 +27,14 @@
   margin: 0 auto;
 }
 
+.hero-logo {
+  margin-bottom: var(--space-6);
+}
+.hero-logo svg {
+  width: 100px;
+  height: 100px;
+}
+
 .hero h1 {
   font-size: var(--font-size-hero);
   font-weight: 800;
@@ -117,8 +125,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 24px;
   margin-bottom: var(--space-4);
+  color: var(--color-accent);
+}
+
+.feature-icon svg {
+  width: 24px;
+  height: 24px;
 }
 
 .feature-card h3 {
@@ -227,7 +240,14 @@
 
 .pricing-check {
   color: var(--color-accent);
-  font-weight: 700;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.pricing-check svg {
+  width: 16px;
+  height: 16px;
 }
 
 .footer {

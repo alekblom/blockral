@@ -5,15 +5,15 @@ type RouteHandler = (outlet: HTMLElement) => (() => void) | void;
 interface Route {
   path: string;
   render: RouteHandler;
-  requiresWallet?: boolean;
+  requiresAuth?: boolean;
 }
 
 const routes: Route[] = [];
 let currentCleanup: (() => void) | null = null;
 let outlet: HTMLElement | null = null;
 
-export function registerRoute(path: string, render: RouteHandler, requiresWallet = false): void {
-  routes.push({ path, render, requiresWallet });
+export function registerRoute(path: string, render: RouteHandler, requiresAuth = false): void {
+  routes.push({ path, render, requiresAuth });
 }
 
 export function navigate(path: string): void {
@@ -45,9 +45,12 @@ function resolve(): void {
     return;
   }
 
-  if (route.requiresWallet && !store.getState().wallet.connected) {
-    navigate('/');
-    return;
+  if (route.requiresAuth) {
+    const BA = (window as any).BuidlingsAuth;
+    if (typeof BA !== 'undefined' && !BA.isLoggedIn()) {
+      navigate('/');
+      return;
+    }
   }
 
   outlet.innerHTML = '';

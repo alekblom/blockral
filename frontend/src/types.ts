@@ -5,6 +5,7 @@ export interface ReferralProgramData {
   referrerCommissionBps: number;
   platformFeeBps: number;
   platformWallet: string;
+  verificationAuthority: string;
   totalPayments: number;
   totalReferrers: number;
   active: boolean;
@@ -25,8 +26,11 @@ export interface ReferralLinkData {
   balance: number;
 }
 
+export type ChainId = 'solana' | 'sui' | 'ethereum' | 'base' | 'polygon';
+
 export interface AppState {
   wallet: {
+    chain: ChainId;
     connected: boolean;
     publicKey: string | null;
     walletName: string | null;

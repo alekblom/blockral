@@ -1,19 +1,19 @@
-import { store } from '../state';
 import { navigate } from '../router';
-import { showWalletModal } from '../wallet/ui';
+import { ICON_LOCK, ICON_BOLT, ICON_SEARCH, ICON_CHECK, ICON_SHIELD_CHECK, LOGO_HERO_SVG } from '../icons';
 
 export function renderLanding(outlet: HTMLElement): void {
   outlet.innerHTML = `
     <div class="landing">
       <section class="hero">
         <div class="hero-content">
+          <div class="hero-logo">${LOGO_HERO_SVG}</div>
           <div class="hero-badge">
             <span class="dot"></span>
-            Live on Solana Devnet
+            Multi-Chain Support
           </div>
           <h1>Web3 Referrals, <span class="text-gradient">On-Chain</span></h1>
           <p class="hero-subtitle">
-            Trustless referral programs on Solana. Immutable commission rates,
+            Trustless referral programs on Solana, Ethereum, Base, Polygon &amp; Sui. Immutable commission rates,
             instant payouts, fully transparent. No applications, no geo restrictions.
           </p>
           <div class="hero-actions">
@@ -27,19 +27,24 @@ export function renderLanding(outlet: HTMLElement): void {
         <h2>Why <span class="text-gradient">Web3</span> Referrals?</h2>
         <div class="features-grid">
           <div class="feature-card">
-            <div class="feature-icon">\u{1f512}</div>
+            <div class="feature-icon">${ICON_LOCK}</div>
             <h3>Immutable Terms</h3>
             <p>Commission rates are set on-chain. They can never be cut retroactively, unlike Web2 affiliate programs.</p>
           </div>
           <div class="feature-card">
-            <div class="feature-icon">\u26a1</div>
+            <div class="feature-icon">${ICON_BOLT}</div>
             <h3>Instant Payouts</h3>
             <p>No net-30 payment terms, no minimums. Funds are split atomically through smart contracts.</p>
           </div>
           <div class="feature-card">
-            <div class="feature-icon">\u{1f50d}</div>
+            <div class="feature-icon">${ICON_SEARCH}</div>
             <h3>Fully Transparent</h3>
             <p>All payments are on-chain and publicly auditable. No disputes about tracking or attribution.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">${ICON_SHIELD_CHECK}</div>
+            <h3>Verified Affiliates</h3>
+            <p>Optionally gate programs to verified wallets only. Integrates with <a href="https://blockinity.com">Blockinity</a> for identity credentials.</p>
           </div>
         </div>
       </section>
@@ -50,12 +55,12 @@ export function renderLanding(outlet: HTMLElement): void {
           <div class="step">
             <div class="step-number">1</div>
             <h3>Create Program</h3>
-            <p>Product owner sets up a referral program with commission rate on-chain.</p>
+            <p>Product owner deploys a referral program with commission rate on any supported chain.</p>
           </div>
           <div class="step">
             <div class="step-number">2</div>
             <h3>Join & Share</h3>
-            <p>Referrers join permissionlessly and get a unique payment address (PDA).</p>
+            <p>Referrers join and get a unique payment address. Programs can be open or gated to verified affiliates.</p>
           </div>
           <div class="step">
             <div class="step-number">3</div>
@@ -71,24 +76,32 @@ export function renderLanding(outlet: HTMLElement): void {
           <div class="pricing-label">Self-host with zero fees, or use blockral.com (0.5% platform fee)</div>
           <div class="pricing-features">
             <div class="pricing-feature">
-              <span class="pricing-check">\u2713</span>
+              <span class="pricing-check">${ICON_CHECK}</span>
               <span>Unlimited referral programs</span>
             </div>
             <div class="pricing-feature">
-              <span class="pricing-check">\u2713</span>
+              <span class="pricing-check">${ICON_CHECK}</span>
               <span>Customizable commission rates (0.01% - 50%)</span>
             </div>
             <div class="pricing-feature">
-              <span class="pricing-check">\u2713</span>
+              <span class="pricing-check">${ICON_CHECK}</span>
               <span>On-chain smart contract enforcement</span>
             </div>
             <div class="pricing-feature">
-              <span class="pricing-check">\u2713</span>
+              <span class="pricing-check">${ICON_CHECK}</span>
               <span>Push or pull distribution models</span>
             </div>
             <div class="pricing-feature">
-              <span class="pricing-check">\u2713</span>
+              <span class="pricing-check">${ICON_CHECK}</span>
+              <span>5 chains: Solana, Ethereum, Base, Polygon, Sui</span>
+            </div>
+            <div class="pricing-feature">
+              <span class="pricing-check">${ICON_CHECK}</span>
               <span>Composable &mdash; other dApps can integrate</span>
+            </div>
+            <div class="pricing-feature">
+              <span class="pricing-check">${ICON_CHECK}</span>
+              <span>Optional affiliate verification via <a href="https://blockinity.com">Blockinity</a></span>
             </div>
           </div>
           <button class="btn-primary" id="pricing-cta" style="width: 100%">
@@ -98,22 +111,24 @@ export function renderLanding(outlet: HTMLElement): void {
       </section>
 
       <footer class="footer">
-        <p>Blockral &mdash; Built on Solana &mdash; A <a href="https://buidlings.com">Buidlings</a> product</p>
+        <p>Blockral &mdash; Multi-Chain Referrals &mdash; A <a href="https://buidlings.com">Buidlings</a> product</p>
       </footer>
     </div>
   `;
 
   const handleCta = () => {
-    if (store.getState().wallet.connected) {
-      navigate('/create');
-    } else {
-      showWalletModal();
-      const unsub = store.subscribe('wallet', (state) => {
-        if (state.wallet.connected) {
-          unsub();
+    const BA = (window as any).BuidlingsAuth;
+    if (typeof BA !== 'undefined' && !BA.isLoggedIn()) {
+      BA.login();
+      const handler = () => {
+        if (typeof BA !== 'undefined' && BA.isLoggedIn()) {
+          window.removeEventListener('focus', handler);
           navigate('/create');
         }
-      });
+      };
+      window.addEventListener('focus', handler);
+    } else {
+      navigate('/create');
     }
   };
 

@@ -26,3 +26,7 @@ export function bpsToPercent(bps: number): number {
 export function percentToBps(percent: number): number {
   return Math.round(percent * 100);
 }
+
+export function formatNativeAmount(raw: number, decimals: number): string {
+  return (raw / Math.pow(10, decimals)).toFixed(4);
+}

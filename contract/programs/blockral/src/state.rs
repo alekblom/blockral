@@ -9,6 +9,7 @@ pub struct ReferralProgram {
     pub referrer_commission_bps: u16,
     pub platform_fee_bps: u16,
     pub platform_wallet: Pubkey,
+    pub verification_authority: Pubkey,
     pub total_payments: u64,
     pub total_referrers: u32,
     pub active: bool,

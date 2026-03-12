@@ -12,6 +12,12 @@ export const MIN_COMMISSION_BPS = 1;    // 0.01%
 
 export const EXPLORER_URL = 'https://explorer.solana.com';
 
+// Sui constants
+export const SUI_NETWORK = 'testnet';
+export const SUI_RPC_URL = 'https://fullnode.testnet.sui.io:443';
+export const SUI_EXPLORER_URL = 'https://suiscan.xyz/testnet';
+export const SUI_PACKAGE_ID = '0x0'; // Replace after sui client publish
+
 export const ACCENT_COLORS = [
   '#00d4aa', '#9945ff', '#14f195', '#ff6b6b', '#ffa502',
   '#1e90ff', '#ff79c6', '#bd93f9', '#8be9fd', '#f1fa8c',

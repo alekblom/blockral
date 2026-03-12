@@ -1,8 +1,9 @@
 import { store } from '../state';
 import { navigate } from '../router';
 import { $ } from '../utils/dom';
-import { fetchAllPrograms } from '../solana/program';
 import { createProgramCard } from '../components/program-card';
+import { getActiveChain } from '../chain/manager';
+import { isEvmChain } from '../evm/networks';
 
 export function renderMyPrograms(outlet: HTMLElement): (() => void) | void {
   outlet.innerHTML = `
@@ -24,7 +25,24 @@ export function renderMyPrograms(outlet: HTMLElement): (() => void) | void {
 
   async function loadPrograms(): Promise<void> {
     const pubkey = store.getState().wallet.publicKey;
-    if (!pubkey) return;
+    if (!pubkey) {
+      const content = $('#owner-content', outlet)!;
+      content.innerHTML = `
+        <div class="browse-loading" style="text-align:center;padding:var(--space-16)">
+          <h2 style="margin-bottom:var(--space-4)">Connect your wallet</h2>
+          <p class="text-muted" style="margin-bottom:var(--space-6)">Connect a wallet to view your referral programs.</p>
+          <button class="btn-primary" id="programs-connect-wallet">Connect Wallet</button>
+        </div>
+      `;
+      $('#programs-connect-wallet', content)?.addEventListener('click', async () => {
+        const { showWalletModal } = await import('../wallet/ui');
+        showWalletModal();
+        const unsub = store.subscribe('wallet', (state) => {
+          if (state.wallet.connected) { unsub(); loadPrograms(); }
+        });
+      });
+      return;
+    }
 
     const content = $('#owner-content', outlet)!;
     const stats = $('#owner-stats', outlet)!;
@@ -37,7 +55,19 @@ export function renderMyPrograms(outlet: HTMLElement): (() => void) | void {
     `;
 
     try {
-      const allPrograms = await fetchAllPrograms();
+      let allPrograms;
+      const chain = getActiveChain();
+      if (isEvmChain(chain)) {
+        const { fetchAllPrograms } = await import('../evm/program');
+        allPrograms = await fetchAllPrograms();
+      } else if (chain === 'sui') {
+        const { fetchAllPrograms } = await import('../sui/program');
+        allPrograms = await fetchAllPrograms();
+      } else {
+        const { fetchAllPrograms } = await import('../solana/program');
+        allPrograms = await fetchAllPrograms();
+      }
+
       const myPrograms = allPrograms.filter(p => p.creator === pubkey);
 
       const activeCount = myPrograms.filter(p => p.active).length;

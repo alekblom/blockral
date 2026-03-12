@@ -2,12 +2,11 @@ import { store } from '../state';
 import { navigate } from '../router';
 import { $ } from '../utils/dom';
 import { formatSol, truncateAddress, bpsToPercent } from '../utils/format';
-import { fetchLinksForReferrer, fetchProgramByAddress, buildDistributeTx, buildClaimTx } from '../solana/program';
-import { signAndSendTransaction } from '../wallet/adapter';
 import { showToast } from '../components/toast';
 import { createCopyButton } from '../components/copy-button';
-import { EXPLORER_URL, SOLANA_NETWORK } from '../constants';
-import { PublicKey } from '@solana/web3.js';
+import { showTestPaymentModal } from '../components/test-payment-modal';
+import { getActiveChain, getNativeToken, getExplorerUrl } from '../chain/manager';
+import { isEvmChain } from '../evm/networks';
 import type { ReferralLinkData, ReferralProgramData } from '../types';
 
 interface LinkWithProgram {
@@ -35,10 +34,30 @@ export function renderReferrerDashboard(outlet: HTMLElement): (() => void) | voi
 
   async function loadLinks(): Promise<void> {
     const pubkey = store.getState().wallet.publicKey;
-    if (!pubkey) return;
+    if (!pubkey) {
+      const content = $('#referrer-content', outlet)!;
+      content.innerHTML = `
+        <div class="browse-loading" style="text-align:center;padding:var(--space-16)">
+          <h2 style="margin-bottom:var(--space-4)">Connect your wallet</h2>
+          <p class="text-muted" style="margin-bottom:var(--space-6)">Connect a wallet to view your referral links.</p>
+          <button class="btn-primary" id="referrals-connect-wallet">Connect Wallet</button>
+        </div>
+      `;
+      $('#referrals-connect-wallet', content)?.addEventListener('click', async () => {
+        const { showWalletModal } = await import('../wallet/ui');
+        showWalletModal();
+        const unsub = store.subscribe('wallet', (state) => {
+          if (state.wallet.connected) { unsub(); loadLinks(); }
+        });
+      });
+      return;
+    }
 
     const content = $('#referrer-content', outlet)!;
     const stats = $('#referrer-stats', outlet)!;
+    const chain = getActiveChain();
+    const token = getNativeToken();
+    const explorerUrl = getExplorerUrl();
 
     content.innerHTML = `
       <div class="browse-loading">
@@ -48,13 +67,29 @@ export function renderReferrerDashboard(outlet: HTMLElement): (() => void) | voi
     `;
 
     try {
-      const links = await fetchLinksForReferrer(new PublicKey(pubkey));
+      let links: ReferralLinkData[];
+      let fetchProgram: (addr: string) => Promise<ReferralProgramData | null>;
+
+      if (isEvmChain(chain)) {
+        const evmMod = await import('../evm/program');
+        links = await evmMod.fetchLinksForReferrer(pubkey);
+        fetchProgram = evmMod.fetchProgramByAddress;
+      } else if (chain === 'sui') {
+        const suiMod = await import('../sui/program');
+        links = await suiMod.fetchLinksForReferrer(pubkey);
+        fetchProgram = suiMod.fetchProgramByAddress;
+      } else {
+        const { PublicKey } = await import('@solana/web3.js');
+        const solMod = await import('../solana/program');
+        links = await solMod.fetchLinksForReferrer(new PublicKey(pubkey));
+        fetchProgram = solMod.fetchProgramByAddress;
+      }
 
       // Fetch program data for each link
       const linksWithPrograms: LinkWithProgram[] = await Promise.all(
         links.map(async link => ({
           link,
-          program: await fetchProgramByAddress(link.program),
+          program: await fetchProgram(link.program),
         })),
       );
 
@@ -70,11 +105,11 @@ export function renderReferrerDashboard(outlet: HTMLElement): (() => void) | voi
         </div>
         <div class="stat-card">
           <div class="stat-label">Pending Balance</div>
-          <div class="stat-value">${formatSol(totalBalance)} SOL</div>
+          <div class="stat-value">${formatSol(totalBalance)} ${token}</div>
         </div>
         <div class="stat-card">
           <div class="stat-label">Total Earned</div>
-          <div class="stat-value">${formatSol(totalEarned)} SOL</div>
+          <div class="stat-value">${formatSol(totalEarned)} ${token}</div>
         </div>
         <div class="stat-card">
           <div class="stat-label">Total Payments</div>
@@ -115,7 +150,7 @@ export function renderReferrerDashboard(outlet: HTMLElement): (() => void) | voi
           </div>
           <div class="link-card-body">
             <div class="link-card-balance">
-              <div class="link-card-balance-amount">${formatSol(link.balance)} SOL</div>
+              <div class="link-card-balance-amount">${formatSol(link.balance)} ${token}</div>
               <div class="link-card-balance-label">Pending Balance</div>
             </div>
             <div class="link-card-stats">
@@ -125,7 +160,7 @@ export function renderReferrerDashboard(outlet: HTMLElement): (() => void) | voi
               </div>
               <div class="link-card-stat">
                 <span class="link-card-stat-label">Total Earned</span>
-                <span class="link-card-stat-value">${formatSol(link.referrerClaimed)} SOL</span>
+                <span class="link-card-stat-value">${formatSol(link.referrerClaimed)} ${token}</span>
               </div>
               <div class="link-card-stat">
                 <span class="link-card-stat-label">Payments</span>
@@ -161,11 +196,22 @@ export function renderReferrerDashboard(outlet: HTMLElement): (() => void) | voi
 
         // Explorer link
         const explorerLink = document.createElement('a');
-        explorerLink.href = `${EXPLORER_URL}/address/${link.address}?cluster=${SOLANA_NETWORK}`;
+        explorerLink.href = chain === 'sui'
+          ? `${explorerUrl}/object/${link.address}`
+          : isEvmChain(chain)
+            ? `${explorerUrl}/address/${link.address}`
+            : `${explorerUrl}/address/${link.address}?cluster=devnet`;
         explorerLink.target = '_blank';
         explorerLink.className = 'btn-secondary btn-sm';
         explorerLink.textContent = 'Explorer';
         actionsEl.appendChild(explorerLink);
+
+        // Test payment
+        const testPayBtn = document.createElement('button');
+        testPayBtn.className = 'btn-secondary btn-sm';
+        testPayBtn.textContent = 'Test Payment';
+        testPayBtn.addEventListener('click', () => showTestPaymentModal(link.address, loadLinks));
+        actionsEl.appendChild(testPayBtn);
 
         grid.appendChild(card);
       });
@@ -183,16 +229,31 @@ export function renderReferrerDashboard(outlet: HTMLElement): (() => void) | voi
 
   async function handleDistribute(program: ReferralProgramData, link: ReferralLinkData): Promise<void> {
     try {
-      const pubkey = store.getState().wallet.publicKey!;
-      const tx = await buildDistributeTx(
-        new PublicKey(link.program),
-        new PublicKey(link.address),
-        new PublicKey(program.creator),
-        new PublicKey(link.referrer),
-        new PublicKey(program.platformWallet),
-        new PublicKey(pubkey),
-      );
-      await signAndSendTransaction(tx);
+      const chain = getActiveChain();
+
+      if (isEvmChain(chain)) {
+        const { distribute } = await import('../evm/program');
+        await distribute(link.program, link.referrer);
+      } else if (chain === 'sui') {
+        const { buildDistributeTx } = await import('../sui/program');
+        const { signAndSendSuiTransaction } = await import('../chain/sui');
+        const tx = buildDistributeTx(link.program, link.address);
+        await signAndSendSuiTransaction(tx);
+      } else {
+        const { PublicKey } = await import('@solana/web3.js');
+        const { buildDistributeTx } = await import('../solana/program');
+        const { signAndSendTransaction } = await import('../wallet/adapter');
+        const pubkey = store.getState().wallet.publicKey!;
+        const tx = await buildDistributeTx(
+          new PublicKey(link.program),
+          new PublicKey(link.address),
+          new PublicKey(program.creator),
+          new PublicKey(link.referrer),
+          new PublicKey(program.platformWallet),
+          new PublicKey(pubkey),
+        );
+        await signAndSendTransaction(tx);
+      }
       showToast('Funds distributed!', 'success');
       loadLinks();
     } catch (err: any) {
@@ -202,13 +263,28 @@ export function renderReferrerDashboard(outlet: HTMLElement): (() => void) | voi
 
   async function handleClaim(link: ReferralLinkData): Promise<void> {
     try {
-      const pubkey = store.getState().wallet.publicKey!;
-      const tx = await buildClaimTx(
-        new PublicKey(link.program),
-        new PublicKey(link.address),
-        new PublicKey(pubkey),
-      );
-      await signAndSendTransaction(tx);
+      const chain = getActiveChain();
+
+      if (isEvmChain(chain)) {
+        const { distribute } = await import('../evm/program');
+        await distribute(link.program, link.referrer);
+      } else if (chain === 'sui') {
+        const { buildClaimReferrerTx } = await import('../sui/program');
+        const { signAndSendSuiTransaction } = await import('../chain/sui');
+        const tx = buildClaimReferrerTx(link.program, link.address);
+        await signAndSendSuiTransaction(tx);
+      } else {
+        const { PublicKey } = await import('@solana/web3.js');
+        const { buildClaimTx } = await import('../solana/program');
+        const { signAndSendTransaction } = await import('../wallet/adapter');
+        const pubkey = store.getState().wallet.publicKey!;
+        const tx = await buildClaimTx(
+          new PublicKey(link.program),
+          new PublicKey(link.address),
+          new PublicKey(pubkey),
+        );
+        await signAndSendTransaction(tx);
+      }
       showToast('Funds claimed!', 'success');
       loadLinks();
     } catch (err: any) {

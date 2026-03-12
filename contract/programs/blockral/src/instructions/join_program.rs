@@ -47,6 +47,16 @@ pub fn handler(ctx: Context<JoinProgram>) -> Result<()> {
         .ok_or(BlockralError::ArithmeticOverflow)?;
     program.updated_at = clock.unix_timestamp;
 
+    // If verification_authority is set, log that gated joining is required.
+    // TODO: When blockinity contract is deployed, add cross-program invocation
+    // to verify attestation PDA exists with seeds ["credential", authority, referrer].
+    if program.verification_authority != Pubkey::default() {
+        msg!(
+            "Program requires verification authority: {}",
+            program.verification_authority
+        );
+    }
+
     msg!("Referrer {} joined program", ctx.accounts.referrer.key());
     Ok(())
 }

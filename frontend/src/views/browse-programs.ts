@@ -1,8 +1,9 @@
 import { store } from '../state';
 import { $ } from '../utils/dom';
-import { fetchAllPrograms } from '../solana/program';
 import { createProgramCard } from '../components/program-card';
 import { navigate } from '../router';
+import { getActiveChain, getNativeToken } from '../chain/manager';
+import { isEvmChain } from '../evm/networks';
 
 export function renderBrowsePrograms(outlet: HTMLElement): (() => void) | void {
   outlet.innerHTML = `
@@ -24,6 +25,11 @@ export function renderBrowsePrograms(outlet: HTMLElement): (() => void) | void {
 
   async function loadPrograms(): Promise<void> {
     const content = $('#browse-content', outlet)!;
+    const chain = getActiveChain();
+    const chainNames: Record<string, string> = {
+      solana: 'Solana', sui: 'Sui', ethereum: 'Ethereum', base: 'Base', polygon: 'Polygon',
+    };
+    const chainName = chainNames[chain] || chain;
 
     if (!store.getState().wallet.connected) {
       content.innerHTML = `
@@ -38,12 +44,23 @@ export function renderBrowsePrograms(outlet: HTMLElement): (() => void) | void {
     content.innerHTML = `
       <div class="browse-loading">
         <div class="spinner" style="margin: 0 auto var(--space-4)"></div>
-        <p class="text-muted">Loading programs from Solana...</p>
+        <p class="text-muted">Loading programs from ${chainName}...</p>
       </div>
     `;
 
     try {
-      const programs = await fetchAllPrograms();
+      let programs;
+      if (isEvmChain(chain)) {
+        const { fetchAllPrograms } = await import('../evm/program');
+        programs = await fetchAllPrograms();
+      } else if (chain === 'sui') {
+        const { fetchAllPrograms } = await import('../sui/program');
+        programs = await fetchAllPrograms();
+      } else {
+        const { fetchAllPrograms } = await import('../solana/program');
+        programs = await fetchAllPrograms();
+      }
+
       store.update('programs', { list: programs, loading: false });
 
       if (programs.length === 0) {
@@ -74,7 +91,7 @@ export function renderBrowsePrograms(outlet: HTMLElement): (() => void) | void {
       content.innerHTML = `
         <div class="browse-empty">
           <h2>Error loading programs</h2>
-          <p>${err.message || 'Failed to fetch data from Solana'}</p>
+          <p>${err.message || `Failed to fetch data from ${chainName}`}</p>
           <button class="btn-secondary" id="retry-load">Retry</button>
         </div>
       `;

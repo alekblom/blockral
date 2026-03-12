@@ -1,5 +1,5 @@
 import { Program, AnchorProvider } from '@coral-xyz/anchor';
-import { PublicKey, SystemProgram, Transaction } from '@solana/web3.js';
+import { PublicKey, SystemProgram, Transaction, TransactionInstruction } from '@solana/web3.js';
 import { IDL } from './idl';
 import { PROGRAM_ID, PLATFORM_FEE_BPS, PLATFORM_WALLET } from '../constants';
 import { getConnection, getActiveAdapter } from '../wallet/adapter';
@@ -25,6 +25,7 @@ export async function buildCreateProgramTx(
   creator: PublicKey,
   name: string,
   commissionPercent: number,
+  verificationAuthority: PublicKey = PublicKey.default,
 ): Promise<{ tx: Transaction; programAddress: PublicKey }> {
   const program = getProgram();
   const nameBytes = nameToBytes(name);
@@ -41,6 +42,7 @@ export async function buildCreateProgramTx(
       percentToBps(commissionPercent),
       platformFeeBps,
       platformWallet,
+      verificationAuthority,
     )
     .accounts({
       referralProgram: programPda,
@@ -136,6 +138,26 @@ export async function buildPauseProgramTx(
   return new Transaction().add(ix);
 }
 
+export function buildPayReferralIx(
+  payer: PublicKey,
+  linkPda: PublicKey,
+  lamports: number,
+): TransactionInstruction {
+  return SystemProgram.transfer({
+    fromPubkey: payer,
+    toPubkey: linkPda,
+    lamports,
+  });
+}
+
+export function buildTestPaymentTx(
+  payer: PublicKey,
+  linkPda: PublicKey,
+  lamports: number,
+): Transaction {
+  return new Transaction().add(buildPayReferralIx(payer, linkPda, lamports));
+}
+
 export async function fetchAllPrograms(): Promise<ReferralProgramData[]> {
   const program = getProgram();
   const connection = getConnection();
@@ -145,8 +167,8 @@ export async function fetchAllPrograms(): Promise<ReferralProgramData[]> {
     {
       filters: [
         // ReferralProgram discriminator size check
-        // 8 (discriminator) + 32 (creator) + 32 (name) + 1 (bump) + 2 (commission) + 2 (platform_fee) + 32 (platform_wallet) + 8 (total_payments) + 4 (total_referrers) + 1 (active) + 8 (created_at) + 8 (updated_at) = 138
-        { dataSize: 8 + 32 + 32 + 1 + 2 + 2 + 32 + 8 + 4 + 1 + 8 + 8 },
+        // 8 (discriminator) + 32 (creator) + 32 (name) + 1 (bump) + 2 (commission) + 2 (platform_fee) + 32 (platform_wallet) + 32 (verification_authority) + 8 (total_payments) + 4 (total_referrers) + 1 (active) + 8 (created_at) + 8 (updated_at) = 170
+        { dataSize: 8 + 32 + 32 + 1 + 2 + 2 + 32 + 32 + 8 + 4 + 1 + 8 + 8 },
       ],
     },
   );
@@ -161,6 +183,7 @@ export async function fetchAllPrograms(): Promise<ReferralProgramData[]> {
         referrerCommissionBps: decoded.referrerCommissionBps,
         platformFeeBps: decoded.platformFeeBps,
         platformWallet: decoded.platformWallet.toBase58(),
+        verificationAuthority: decoded.verificationAuthority?.toBase58?.() || PublicKey.default.toBase58(),
         totalPayments: decoded.totalPayments?.toNumber?.() || 0,
         totalReferrers: decoded.totalReferrers || 0,
         active: decoded.active,
@@ -184,6 +207,7 @@ export async function fetchProgramByAddress(address: string): Promise<ReferralPr
       referrerCommissionBps: decoded.referrerCommissionBps,
       platformFeeBps: decoded.platformFeeBps,
       platformWallet: decoded.platformWallet.toBase58(),
+      verificationAuthority: decoded.verificationAuthority?.toBase58?.() || PublicKey.default.toBase58(),
       totalPayments: (decoded.totalPayments as any)?.toNumber?.() || 0,
       totalReferrers: decoded.totalReferrers || 0,
       active: decoded.active,

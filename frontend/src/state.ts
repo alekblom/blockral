@@ -6,6 +6,7 @@ type Listener = (state: AppState) => void;
 function createInitialState(): AppState {
   return {
     wallet: {
+      chain: 'solana',
       connected: false,
       publicKey: null,
       walletName: null,

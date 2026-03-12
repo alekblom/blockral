@@ -15,6 +15,7 @@ export const IDL = {
         { name: 'referrerCommissionBps', type: 'u16' },
         { name: 'platformFeeBps', type: 'u16' },
         { name: 'platformWallet', type: 'publicKey' },
+        { name: 'verificationAuthority', type: 'publicKey' },
       ],
     },
     {
@@ -88,6 +89,7 @@ export const IDL = {
           { name: 'referrerCommissionBps', type: 'u16' },
           { name: 'platformFeeBps', type: 'u16' },
           { name: 'platformWallet', type: 'publicKey' },
+          { name: 'verificationAuthority', type: 'publicKey' },
           { name: 'totalPayments', type: 'u64' },
           { name: 'totalReferrers', type: 'u32' },
           { name: 'active', type: 'bool' },
@@ -129,6 +131,7 @@ export const IDL = {
     { code: 6010, name: 'ArithmeticOverflow', msg: 'Arithmetic overflow' },
     { code: 6011, name: 'LinkHasBalance', msg: 'Link account still has undistributed funds' },
     { code: 6012, name: 'ProgramHasLinks', msg: 'Program still has active referral links' },
+    { code: 6013, name: 'VerificationRequired', msg: 'Referrer does not meet verification requirements' },
   ],
 };
 

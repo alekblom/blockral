@@ -1,5 +1,6 @@
 import { truncateAddress, formatSol, formatDate } from '../utils/format';
 import { showToast } from './toast';
+import { getNativeToken } from '../chain/manager';
 import type { ReferralLinkData } from '../types';
 
 export function createLinkCard(
@@ -8,6 +9,7 @@ export function createLinkCard(
 ): HTMLElement {
   const card = document.createElement('div');
   card.className = 'link-card';
+  const token = getNativeToken();
 
   card.innerHTML = `
     <div class="link-card-header">
@@ -19,7 +21,7 @@ export function createLinkCard(
     </div>
     <div class="link-card-body">
       <div class="link-card-balance">
-        <div class="link-card-balance-amount">${formatSol(link.balance)} SOL</div>
+        <div class="link-card-balance-amount">${formatSol(link.balance)} ${token}</div>
         <div class="link-card-balance-label">Current Balance</div>
       </div>
       <div class="link-card-stats">
@@ -29,11 +31,11 @@ export function createLinkCard(
         </div>
         <div class="link-card-stat">
           <span class="link-card-stat-label">Total Received</span>
-          <span class="link-card-stat-value">${formatSol(link.totalReceived)} SOL</span>
+          <span class="link-card-stat-value">${formatSol(link.totalReceived)} ${token}</span>
         </div>
         <div class="link-card-stat">
           <span class="link-card-stat-label">Referrer Earned</span>
-          <span class="link-card-stat-value">${formatSol(link.referrerClaimed)} SOL</span>
+          <span class="link-card-stat-value">${formatSol(link.referrerClaimed)} ${token}</span>
         </div>
         <div class="link-card-stat">
           <span class="link-card-stat-label">Payments</span>

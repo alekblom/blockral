@@ -2,12 +2,12 @@ import { store } from '../state';
 import { navigate, getRouteParam } from '../router';
 import { $ } from '../utils/dom';
 import { truncateAddress, bpsToPercent, formatDate } from '../utils/format';
-import { fetchProgramByAddress, buildJoinProgramTx } from '../solana/program';
-import { signAndSendTransaction } from '../wallet/adapter';
 import { showToast } from '../components/toast';
 import { showWalletModal } from '../wallet/ui';
 import { PLATFORM_FEE_BPS } from '../constants';
-import { PublicKey } from '@solana/web3.js';
+import { getActiveChain, getNativeToken } from '../chain/manager';
+import { isEvmChain } from '../evm/networks';
+import type { ReferralProgramData } from '../types';
 
 export function renderJoinProgram(outlet: HTMLElement): void {
   const programAddress = getRouteParam('/join/:address', 'address');
@@ -31,6 +31,7 @@ export function renderJoinProgram(outlet: HTMLElement): void {
 
   async function loadProgram(): Promise<void> {
     const content = $('#join-content', outlet)!;
+    const chain = getActiveChain();
 
     if (!store.getState().wallet.connected) {
       content.innerHTML = `
@@ -53,7 +54,18 @@ export function renderJoinProgram(outlet: HTMLElement): void {
     }
 
     try {
-      const program = await fetchProgramByAddress(programAddress!);
+      let program: ReferralProgramData | null;
+      if (isEvmChain(chain)) {
+        const { fetchProgramByAddress } = await import('../evm/program');
+        program = await fetchProgramByAddress(programAddress!);
+      } else if (chain === 'sui') {
+        const { fetchProgramByAddress } = await import('../sui/program');
+        program = await fetchProgramByAddress(programAddress!);
+      } else {
+        const { fetchProgramByAddress } = await import('../solana/program');
+        program = await fetchProgramByAddress(programAddress!);
+      }
+
       if (!program) {
         content.innerHTML = `
           <div class="browse-empty">
@@ -106,7 +118,7 @@ export function renderJoinProgram(outlet: HTMLElement): void {
           </div>
 
           <div class="join-info">
-            <p>By joining, you'll receive a unique payment address (PDA). Share this address with your audience.
+            <p>By joining, you'll receive a unique payment address. Share this address with your audience.
             When someone pays to it, ${commission}% goes to you automatically.</p>
           </div>
 
@@ -130,13 +142,33 @@ export function renderJoinProgram(outlet: HTMLElement): void {
 
         try {
           const pubkey = store.getState().wallet.publicKey!;
-          const { tx, linkAddress } = await buildJoinProgramTx(
-            new PublicKey(programAddress!),
-            new PublicKey(pubkey),
-          );
-          await signAndSendTransaction(tx);
-          showToast('Joined! Your referral link address: ' + truncateAddress(linkAddress.toBase58(), 6), 'success');
-          navigate('/my-referrals');
+
+          if (isEvmChain(chain)) {
+            const { joinProgram } = await import('../evm/program');
+            await joinProgram(programAddress!);
+            showToast('Joined program! Your referral link is ready.', 'success');
+            navigate('/my-referrals');
+          } else if (chain === 'sui') {
+            const { buildJoinProgramTx } = await import('../sui/program');
+            const { signAndSendSuiTransaction } = await import('../chain/sui');
+
+            const tx = buildJoinProgramTx(programAddress!);
+            await signAndSendSuiTransaction(tx);
+            showToast('Joined program! Your referral link is ready.', 'success');
+            navigate('/my-referrals');
+          } else {
+            const { PublicKey } = await import('@solana/web3.js');
+            const { buildJoinProgramTx } = await import('../solana/program');
+            const { signAndSendTransaction } = await import('../wallet/adapter');
+
+            const { tx, linkAddress } = await buildJoinProgramTx(
+              new PublicKey(programAddress!),
+              new PublicKey(pubkey),
+            );
+            await signAndSendTransaction(tx);
+            showToast('Joined! Your referral link address: ' + truncateAddress(linkAddress.toBase58(), 6), 'success');
+            navigate('/my-referrals');
+          }
         } catch (err: any) {
           showToast(err.message || 'Failed to join program', 'error');
           btn.disabled = false;

@@ -188,6 +188,110 @@
   text-decoration: none;
 }
 
+/* Test Payment Modal */
+.test-payment-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-6);
+}
+
+.test-payment-dest {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: var(--font-size-sm);
+}
+
+.test-payment-dest code {
+  font-size: var(--font-size-xs);
+  color: var(--color-accent);
+}
+
+.test-payment-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.test-payment-field label {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+/* Integration Snippet */
+.integration-section {
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  margin-top: var(--space-8);
+  overflow: hidden;
+}
+
+.integration-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-4) var(--space-6);
+  cursor: pointer;
+  user-select: none;
+  transition: background var(--transition-fast);
+}
+
+.integration-header:hover {
+  background: var(--color-bg-tertiary);
+}
+
+.integration-header h3 {
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  margin: 0;
+}
+
+.integration-toggle {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.integration-body {
+  padding: 0 var(--space-6) var(--space-6);
+}
+
+.integration-desc {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-4);
+  line-height: 1.6;
+}
+
+.integration-code-wrapper {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.integration-code-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-2) var(--space-4);
+  background: var(--color-bg-tertiary);
+  border-bottom: 1px solid var(--color-border);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+}
+
+.integration-code {
+  margin: 0;
+  padding: var(--space-4);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  line-height: 1.6;
+  overflow-x: auto;
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+}
+
 @media (max-width: 768px) {
   .dashboard-stats {
     grid-template-columns: repeat(2, 1fr);

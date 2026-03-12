@@ -1,3 +1,5 @@
+import { ICON_CHECK, ICON_X, ICON_INFO } from '../icons';
+
 let container: HTMLElement | null = null;
 
 function ensureContainer(): HTMLElement {
@@ -17,9 +19,9 @@ export function showToast(
   const c = ensureContainer();
 
   const icons: Record<string, string> = {
-    success: '\u2713',
-    error: '\u2717',
-    info: '\u2139',
+    success: ICON_CHECK,
+    error: ICON_X,
+    info: ICON_INFO,
   };
 
   const toast = document.createElement('div');

@@ -178,7 +178,7 @@ export function renderDocs(outlet: HTMLElement): void {
           Programs can be fully permissionless or gated to verified
           affiliates via a verification authority (e.g. <a href="https://blockinity.com">Blockinity</a>).
           Customers pay to this address, and anyone can trigger
-          distribution to split funds between the owner, referrer, and platform.
+          distribution to split funds between the owner and referrer.
         </p>
         <p>
           On Solana, the key innovation is <strong>atomic composition</strong>: referral payments can be included in the
@@ -284,7 +284,7 @@ export function renderDocs(outlet: HTMLElement): void {
               <p>
                 Anyone can call <code>distribute</code> to split accumulated funds according to the
                 commission rate. The referrer receives their commission, the owner receives the remainder
-                (minus platform fee).
+                minus the referrer's commission.
               </p>
             </div>
           </div>
@@ -344,7 +344,7 @@ export function renderDocs(outlet: HTMLElement): void {
         <h3>EVM (Ethereum / Base / Polygon)</h3>
         <p>
           Call <code>distribute(referrer)</code> on the program contract. The contract transfers the referrer's
-          commission, the platform fee, and the owner's share in a single transaction.
+          commission and the owner's share in a single transaction.
         </p>
         <div id="code-distribute-evm"></div>
       </section>

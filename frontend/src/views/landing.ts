@@ -73,7 +73,7 @@ export function renderLanding(outlet: HTMLElement): void {
       <section class="pricing">
         <div class="pricing-card">
           <div class="pricing-amount text-gradient">Free & Open Source</div>
-          <div class="pricing-label">Self-host with zero fees, or use blockral.com (0.5% platform fee)</div>
+          <div class="pricing-label">Self-host with zero fees, or use blockral.com ($1 one-time deploy fee, no ongoing fees)</div>
           <div class="pricing-features">
             <div class="pricing-feature">
               <span class="pricing-check">${ICON_CHECK}</span>

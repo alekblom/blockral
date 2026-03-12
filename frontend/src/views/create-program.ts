@@ -220,7 +220,7 @@ export function renderCreateProgram(outlet: HTMLElement): void {
       try {
         const deductResult = await BA.deduct('blockral_deploy');
         if (!deductResult.success) {
-          showToast(`Insufficient credits. Need $5.00. Buy more at ${deductResult.buy_credits_url || 'alexiuz.com/credits'}`, 'error');
+          showToast(`Insufficient credits. Need $1.00. Buy more at ${deductResult.buy_credits_url || 'alexiuz.com/credits'}`, 'error');
           createBtn.disabled = false;
           createBtn.textContent = 'Deploy Referral Program';
           return;

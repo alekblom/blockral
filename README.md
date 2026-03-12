@@ -67,8 +67,8 @@ VITE_PLATFORM_FEE_BPS=0 npm run build
 
 | Variable | Default | Description |
 |---|---|---|
-| `VITE_PLATFORM_FEE_BPS` | `50` | Platform fee in basis points (0.5%). Set to `0` for self-hosted. |
-| `VITE_PLATFORM_WALLET` | _(empty)_ | Platform wallet pubkey. Required if fee > 0. |
+| `VITE_PLATFORM_FEE_BPS` | `0` | Platform fee in basis points. Default `0` (no on-chain fee). |
+| `VITE_PLATFORM_WALLET` | _(empty)_ | Platform wallet pubkey. Only needed if fee > 0. |
 
 ## Development
 

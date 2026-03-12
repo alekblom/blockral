@@ -4,7 +4,7 @@ export const SOLANA_NETWORK = 'devnet';
 export const PROGRAM_ID = 'BLKrALxxx1111111111111111111111111111111111';
 
 // Platform fee configuration (via env vars for self-hosting)
-export const PLATFORM_FEE_BPS = parseInt(import.meta.env.VITE_PLATFORM_FEE_BPS || '50', 10);
+export const PLATFORM_FEE_BPS = parseInt(import.meta.env.VITE_PLATFORM_FEE_BPS || '0', 10);
 export const PLATFORM_WALLET = import.meta.env.VITE_PLATFORM_WALLET || '';
 
 export const MAX_COMMISSION_BPS = 5000; // 50%

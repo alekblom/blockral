@@ -2,7 +2,7 @@
 
 Trustless, on-chain referral programs on Solana. Product owners set commission rates, referrers earn automatically through smart contract splits.
 
-Part of the [buidlings.com](https://buidlings.com) ecosystem, powered by [coinallocator.com](https://coinallocator.com) fund-splitting primitives.
+Powered by CoinAllocator fund-splitting primitives.
 
 ## Why Web3 Referrals?
 
@@ -82,10 +82,4 @@ cd contract && anchor test
 
 ## License
 
-MIT - see [LICENSE](LICENSE)
-
-## Links
-
-- [blockral.com](https://blockral.com) - Hosted instance
-- [buidlings.com](https://buidlings.com) - Parent ecosystem
-- [coinallocator.com](https://coinallocator.com) - Fund-splitting primitives
+MIT
